@@ -1,0 +1,82 @@
+- hosts: deva,devb,devc
+  become: yes
+  tasks:
+    - name: Create .ssh directory
+      file:
+        path: ~/.ssh
+        state: directory
+        mode: "0700"
+
+    - name: Add SSH key to authorized_keys
+      authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+# Installs and configures haproxy on the haproxy host
+- hosts: haproxy
+  become: yes
+  tasks:
+    - name: Install haproxy
+      apt:
+        name: haproxy
+        state: present
+      notify: restart haproxy
+
+    - name: Configure haproxy
+      template:
+        src: haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg
+      notify: restart haproxy
+# Deploys and tests the flask app on webservers
+- hosts: deva,devb,devc
+  become: yes
+  tasks:
+    - name: Install Python and Flask
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Copy Flask app
+      hosts: deva, devb, devc
+      become: true
+  tasks:
+    - name: Create Flask app directory
+      file:
+        path: /opt/flask-app
+        state: directory
+        mode: 0755
+      changed_when: false
+      check_mode: no
+
+    - name: Copy Flask app files
+      copy:
+        src: mad.py
+        dest: /opt/flask-app
+      notify:
+        - start flask app
+  handlers:
+   - name: start flask app
+     service:
+      name: mad.py
+      state: started
+- hosts: haproxy
+  become: yes
+  tasks:
+    - name: Test haproxy
+      uri:
+        url: "http://{{ hostvars[item]['ansible_default_ipv4']['address'] 
+}}:5000/"
+        method: GET
+        status_code: 200
+      with_items:
+        - deva
+        - devb
+        - devc
+
+  handlers:
+  - name: restart haproxy
+    service:
+      name: haproxy
+      state: restarted
