@@ -1,0 +1,13 @@
+[Webservers]
+deva ansible_host=89.42.141.20 ansible_user=ubuntu
+devb ansible_host=89.42.141.208 ansible_user=ubuntu
+devc ansible_host=89.42.141.21 ansible_user=ubuntu
+
+[Bastionserver]
+bastionnso ansible_host=89.42.141.93 ansible_user=ubuntu
+
+[HAproxyserver]
+haproxy ansible_host=89.42.141.242 ansible_user=ubuntu
+
+[all:vars]
+ansible_user=ubuntu
