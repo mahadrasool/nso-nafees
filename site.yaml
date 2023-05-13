@@ -52,14 +52,14 @@
 
     - name: Copy Flask app files
       copy:
-        src: mad.py
+        src: main.py
         dest: /opt/flask-app
       notify:
         - start flask app
   handlers:
    - name: start flask app
      service:
-      name: mad.py
+      name: main.py
       state: started
 - hosts: haproxy
   become: yes
